@@ -3,9 +3,10 @@
 const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
+// TODO: make global constants
+// TODO: store the base URL (rather than full URL) separately
 const tvMazeUrl = 'http://api.tvmaze.com/search/shows';
-
-
+const defaultImageUrl = 'https://tinyurl.com/tv-missing';
 
 
 /** Given a search term, search for tv shows that match that query.
@@ -16,50 +17,36 @@ const tvMazeUrl = 'http://api.tvmaze.com/search/shows';
  */
 
 async function getShowsByTerm(term) {
-  // ADD: Remove placeholder & make request to TVMaze search shows API.
-  let response = await axios.get(
+  const response = await axios.get(
     tvMazeUrl,
     {
       params: {
         q: term
       }
     }
-
   );
 
-  let shows = response.data;//array
-  let showFiltered = [];
+  const tvMazeResults = response.data; //array
+  const showFiltered = [];
 
-  console.log(shows);
-  for (let show of shows) {
-    show.show.image.medium = show.show.image.medium || 'https://tinyurl.com/tv-missing';
-    let { id, name, summary, image } = show.show;
-    console.log(id, name, summary, image);
-    const showDetails = { id, name, summary, image };
-    console.log('show details:', showDetails);
+  console.log(tvMazeResults);
+
+  // TODO: Consider using .map() here instead
+  for (const result of tvMazeResults) {
+    // let { id, name, summary, image } = show.show;
+    // console.log(id, name, summary, image);
+
+    const { id, name, summary } = result.show;
+    const showDetails = { id, name, summary };
+
+    // TODO: The docstring defined a contract for this to be 'image'
+    showDetails.imageUrl = (
+      result.show.image ? result.show.image.medium : defaultImageUrl
+    );
+
     showFiltered.push(showDetails);
   }
   return showFiltered;
-
-
-  // return [
-  //   {
-  //     id: 1767,
-  //     name: "The Bletchley Circle",
-  //     summary:
-  //       `<p><b>The Bletchley Circle</b> follows the journey of four ordinary
-  //          women with extraordinary skills that helped to end World War II.</p>
-  //        <p>Set in 1952, Susan, Millie, Lucy and Jean have returned to their
-  //          normal lives, modestly setting aside the part they played in
-  //          producing crucial intelligence, which helped the Allies to victory
-  //          and shortened the war. When Susan discovers a hidden code behind an
-  //          unsolved murder she is met by skepticism from the police. She
-  //          quickly realises she can only begin to crack the murders and bring
-  //          the culprit to justice with her former friends.</p>`,
-  //     image:
-  //         "http://static.tvmaze.com/uploads/images/medium_portrait/147/369403.jpg"
-  //   }
-  // ]
 }
 
 
@@ -76,7 +63,7 @@ function displayShows(shows) {
         <div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
-              src="${show.image.medium}"
+              src="${show.imageUrl}"
               alt="${show.name}"
               class="w-25 me-3">
            <div class="media-body">
