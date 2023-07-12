@@ -3,10 +3,8 @@
 const $showsList = $("#showsList");
 const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
-// TODO: make global constants
-// TODO: store the base URL (rather than full URL) separately
-const tvMazeUrl = 'http://api.tvmaze.com/search/shows';
-const defaultImageUrl = 'https://tinyurl.com/tv-missing';
+const TV_MAZE_BASE_URL = 'http://api.tvmaze.com/';
+const DEFAULT_IMAGE_URL = 'https://tinyurl.com/tv-missing';
 
 
 /** Given a search term, search for tv shows that match that query.
@@ -18,7 +16,7 @@ const defaultImageUrl = 'https://tinyurl.com/tv-missing';
 
 async function getShowsByTerm(term) {
   const response = await axios.get(
-    tvMazeUrl,
+    `${TV_MAZE_BASE_URL}search/shows`,
     {
       params: {
         q: term
@@ -27,26 +25,29 @@ async function getShowsByTerm(term) {
   );
 
   const tvMazeResults = response.data; //array
-  const showFiltered = [];
 
   console.log(tvMazeResults);
 
-  // TODO: Consider using .map() here instead
-  for (const result of tvMazeResults) {
-    // let { id, name, summary, image } = show.show;
-    // console.log(id, name, summary, image);
+  const showsFiltered = tvMazeResults.map(extractFilterShows);
 
-    const { id, name, summary } = result.show;
-    const showDetails = { id, name, summary };
+  return showsFiltered;
+}
 
-    // TODO: The docstring defined a contract for this to be 'image'
-    showDetails.imageUrl = (
-      result.show.image ? result.show.image.medium : defaultImageUrl
-    );
+/**
+ * Accept a result object from a TV Maze show search
+ * Returns a filtered version of that object with only: id, name, summary
+ * and image; if image is null, provides a default image URL instead
+ * @param {object} tvMazeResult
+ */
+function extractFilterShows(tvMazeResult) {
+  const { id, name, summary } = tvMazeResult.show;
+  const showDetails = { id, name, summary };
 
-    showFiltered.push(showDetails);
-  }
-  return showFiltered;
+  showDetails.image = (
+    tvMazeResult.show.image ? tvMazeResult.show.image.medium : DEFAULT_IMAGE_URL
+  );
+
+  return showDetails;
 }
 
 
@@ -63,7 +64,7 @@ function displayShows(shows) {
         <div data-show-id="${show.id}" class="Show col-md-12 col-lg-6 mb-4">
          <div class="media">
            <img
-              src="${show.imageUrl}"
+              src="${show.image}"
               alt="${show.name}"
               class="w-25 me-3">
            <div class="media-body">
