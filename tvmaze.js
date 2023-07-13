@@ -25,11 +25,9 @@ async function getShowsByTerm(term) {
   );
 
   const tvMazeResults = response.data; //array
-
-  console.log(tvMazeResults);
+  // console.log(tvMazeResults);
 
   const showsFiltered = tvMazeResults.map(extractFilterShows);
-
   return showsFiltered;
 }
 
@@ -105,10 +103,60 @@ $searchForm.on("submit", async function handleSearchForm(evt) {
  *      { id, name, season, number }
  */
 
-// async function getEpisodesOfShow(id) { }
+async function getEpisodesOfShow(id = 38963) {
+  const response = await axios.get(
+    `${TV_MAZE_BASE_URL}shows/${id}/episodes`
+  );
+  // console.log("raw axios response:", response);
+  // response.data is an array of episode arrays (1 - n)
+  // response.data[episode array] is an array episode objects
+  // response.data[episode array][index] is an episode object
 
-/** Write a clear docstring for this function... */
+  const tvMazeResults = response.data; //array or arrays
 
-// function displayEpisodes(episodes) { }
+  const episodesFiltered = tvMazeResults.map(extractFilterEpisode);
+  // console.log("getEpisodeOfShow will return:", episodesFiltered);
+
+  return episodesFiltered;
+}
+
+/**
+ * Accept a result object from a TV Maze episode search
+ * Returns a filtered version of that object with only: id, name, season
+ * and number
+ * @param {object} tvMazeEpisode
+ */
+function extractFilterEpisode(tvMazeEpisode) {
+  // console.log("extractFilterEpisodes is receiving:", tvMazeEpisode);
+  const { id, name, season, number } = tvMazeEpisode;
+  const episodeDetails = { id, name, season, number };
+  // console.log("extractor is returning the object:", episodeDetails);
+  return episodeDetails;
+}
+
+/**
+ * It will accept an array of episodes and then populate the episode data
+ * into the 'episodesList' DOM underorder list
+ * @param {array} episodes
+ */
+function displayEpisodes(episodes) {
+  // console.log("displayEpisodes receives episodes:", episodes);
+
+  const $episodesList = $("#episodesList");
+  // console.log("we think episodes list UL is:", $episodesList);
+  $episodesList.empty();
+
+  for (const episode of episodes) {
+    // create and add a new episode object to episodes list UL
+    const $newLi = $(`<li>${episode.name} (season ${episode.season}, number ${episode.number})</li>`);
+    // console.log("new html we will add is:", $newLi);
+
+    $episodesList.append($newLi);
+  }
+
+  $episodesArea.css("display", "block");
+}
 
 // add other functions that will be useful / match our structure & design
+
+
