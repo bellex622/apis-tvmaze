@@ -5,6 +5,7 @@ const $episodesArea = $("#episodesArea");
 const $searchForm = $("#searchForm");
 const TV_MAZE_BASE_URL = 'http://api.tvmaze.com/';
 const DEFAULT_IMAGE_URL = 'https://tinyurl.com/tv-missing';
+const $getEpisodesButton = $(".Show-getEpisodes");
 
 
 /** Given a search term, search for tv shows that match that query.
@@ -103,7 +104,7 @@ $searchForm.on("submit", async function handleSearchForm(evt) {
  *      { id, name, season, number }
  */
 
-async function getEpisodesOfShow(id = 38963) {
+async function getEpisodesOfShow(id) {
   const response = await axios.get(
     `${TV_MAZE_BASE_URL}shows/${id}/episodes`
   );
@@ -113,9 +114,12 @@ async function getEpisodesOfShow(id = 38963) {
   // response.data[episode array][index] is an episode object
 
   const tvMazeResults = response.data; //array or arrays
+  console.log("tvMazeResults", tvMazeResults);
 
+  //change the varible name
   const episodesFiltered = tvMazeResults.map(extractFilterEpisode);
-  // console.log("getEpisodeOfShow will return:", episodesFiltered);
+  console.log("getEpisodeOfShow will return:", episodesFiltered);
+
 
   return episodesFiltered;
 }
@@ -129,9 +133,9 @@ async function getEpisodesOfShow(id = 38963) {
 function extractFilterEpisode(tvMazeEpisode) {
   // console.log("extractFilterEpisodes is receiving:", tvMazeEpisode);
   const { id, name, season, number } = tvMazeEpisode;
-  const episodeDetails = { id, name, season, number };
+  return { id, name, season, number };
   // console.log("extractor is returning the object:", episodeDetails);
-  return episodeDetails;
+  // return episodeDetails;
 }
 
 /**
@@ -149,14 +153,41 @@ function displayEpisodes(episodes) {
   for (const episode of episodes) {
     // create and add a new episode object to episodes list UL
     const $newLi = $(`<li>${episode.name} (season ${episode.season}, number ${episode.number})</li>`);
-    // console.log("new html we will add is:", $newLi);
+    console.log("new html we will add is:", $newLi);
 
     $episodesList.append($newLi);
   }
 
-  $episodesArea.css("display", "block");
+  $episodesArea.show();
 }
 
 // add other functions that will be useful / match our structure & design
+
+
+/**It will tie together getEpisodesOfShow and displayEpisodes. It takes the show id. */
+async function findEpisodesAndDisplay(showId) {
+
+  const episodes = await getEpisodesOfShow(showId);
+  console.log("episodes=", episodes);
+  displayEpisodes(episodes);
+
+
+}
+
+/**Add eventlisten when clicking the episode button */
+$showsList.on("click", "button", async function handleGetEpisodes(evt) {
+  // change variable name
+  const $divWithId = $(evt.target).closest(".Show");
+  console.log('divWithId', $divWithId);
+
+  //looking for this attribute:data-show-id="${show.id}"
+  const showId = $divWithId.data("show-id");
+  console.log("showId=", showId);
+  // console.log();
+  await findEpisodesAndDisplay(showId);
+
+});
+
+
 
 
